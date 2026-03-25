@@ -9,9 +9,7 @@ defmodule TodoList do
   Creates a new empty TodoList.
   """
   @spec new() :: map()
-  def new do
-    %{}
-  end
+  def new(), do: MultiDict.new()
 
   @doc """
   Adds an `entry` to the `list` with the `date`.

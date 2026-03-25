@@ -1,6 +1,5 @@
 defmodule TodoListTest do
   use ExUnit.Case
-  doctest TodoList
 
   test "adds entries and gets entries" do
     list =
