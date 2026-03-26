@@ -4,8 +4,14 @@ defmodule TodoList do
   @type t :: %__MODULE__{}
   @type entry :: %{date: Date.t(), title: String.t()}
 
-  @spec new() :: t()
-  def new(), do: %__MODULE__{}
+  @spec new(list(entry())) :: t()
+  def new(entries \\ []) do
+    Enum.reduce(
+      entries,
+      %__MODULE__{},
+      &add_entry(&2, &1)
+    )
+  end
 
   @spec entries(t(), Date.t()):: list(entry())
   def entries(list, date) do

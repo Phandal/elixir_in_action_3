@@ -3,19 +3,22 @@ defmodule TodoListTest do
 
   test "full crud on TodoList entries" do
     list =
-      TodoList.new()
+      TodoList.new([%{date: ~D[2025-03-25], title: "Old"}])
       |> TodoList.add_entry(%{date: ~D[2026-03-25], title: "Dentist"})
       |> TodoList.add_entry(%{date: ~D[2026-01-25], title: "Dinner"})
       |> TodoList.add_entry(%{date: ~D[2026-01-25], title: "Shopping"})
 
-    assert [%{date: ~D[2026-03-25], id: 1, title: "Updated"}] =
+    assert [%{date: ~D[2025-03-25], title: "Old", id: 1}] ==
+             TodoList.entries(list, ~D[2025-03-25])
+
+    assert [%{date: ~D[2026-03-25], id: 2, title: "Updated"}] ==
              list
-             |> TodoList.update_entry(1, fn entry -> %{entry | title: "Updated"} end)
+             |> TodoList.update_entry(2, fn entry -> %{entry | title: "Updated"} end)
              |> TodoList.entries(~D[2026-03-25])
 
-    assert [] =
+    assert [] ==
              list
-             |> TodoList.delete_entry(1)
+             |> TodoList.delete_entry(2)
              |> TodoList.entries(~D[2026-03-25])
 
   end
