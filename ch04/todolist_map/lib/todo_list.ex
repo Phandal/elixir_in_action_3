@@ -39,3 +39,20 @@ defmodule TodoList do
     %__MODULE__{list | entries: Map.delete(list.entries, id)}
   end
 end
+
+defmodule TodoList.CsvImporter do
+  def import(path) do
+    entries = File.stream!(path)
+    |> Enum.map(&sanitize/1)
+
+    TodoList.new(entries)
+  end
+
+  defp sanitize(line) do
+    [date, title] = line
+    |> String.trim
+    |> String.split(",")
+
+    %{date: Date.from_iso8601!(date), title: title}
+  end
+end

@@ -22,4 +22,11 @@ defmodule TodoListTest do
              |> TodoList.entries(~D[2026-03-25])
 
   end
+
+  test "todo csv importer" do
+    list = TodoList.CsvImporter.import("#{__DIR__}/../todos.csv")
+
+    assert [%{date: ~D[2018-12-20], title: "Shopping", id: 2}] ==
+                      TodoList.entries(list, ~D[2018-12-20])
+  end
 end
