@@ -1,0 +1,35 @@
+defmodule TodoList do
+  defstruct next_id: 1, entries: %{}
+
+  @type t :: %__MODULE__{}
+  @type entry :: %{date: Date.t(), title: String.t()}
+
+  @spec new() :: t()
+  def new(), do: %__MODULE__{}
+
+  @spec entries(t(), Date.t()):: list(entry())
+  def entries(list, date) do
+    list.entries
+    |> Map.values()
+    |> Enum.filter(fn entry -> entry.date == date end)
+  end
+
+  @spec add_entry(t(), entry()) :: t()
+  def add_entry(list, entry) do
+    entry = Map.put(entry, :id, list.next_id)
+    %__MODULE__{
+      next_id: list.next_id + 1,
+      entries: Map.put(list.entries, list.next_id, entry)
+    }
+  end
+
+  @spec update_entry(t(), pos_integer(), (entry -> entry)) :: t()
+  def update_entry(list = %__MODULE__{}, id, updater) when is_number(id) do
+    %__MODULE__{list | entries: Map.replace_lazy(list.entries, id, updater)}
+  end
+
+  @spec delete_entry(t(), pos_integer()) :: t()
+  def delete_entry(list = %__MODULE__{}, id) when is_number(id) do
+    %__MODULE__{list | entries: Map.delete(list.entries, id)}
+  end
+end
