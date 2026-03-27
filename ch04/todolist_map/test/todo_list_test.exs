@@ -29,4 +29,18 @@ defmodule TodoListTest do
     assert [%{date: ~D[2018-12-20], title: "Shopping", id: 2}] ==
                       TodoList.entries(list, ~D[2018-12-20])
   end
+
+  test "Collectable protocol implementation" do
+    entries = [
+      %{date: ~D[2026-03-25], title: "Dentist"},
+      %{date: ~D[2026-01-25], title: "Dinner"},
+      %{date: ~D[2026-01-25], title: "Shopping"}
+    ]
+
+    list = Enum.into(entries, TodoList.new())
+
+    assert [%{date: ~D[2026-03-25], id: 1, title: "Dentist"}] ==
+             TodoList.entries(list, ~D[2026-03-25])
+
+  end
 end
