@@ -32,37 +32,45 @@ defmodule Calculator do
   def sub(server_pid, value) do
     send(server_pid, {:sub, value})
   end
-  
+
   def mul(server_pid, value) do
     send(server_pid, {:mul, value})
   end
-  
+
   def div(server_pid, value) do
     send(server_pid, {:div, value})
   end
 
   def value(server_pid) do
     send(server_pid, {:value, self()})
+
     receive do
       {:response, value} -> value
     end
   end
-  
+
   @spec loop(number()) :: no_return()
   defp loop(state) do
-    state = receive  do
-      {:add, value} -> state + value
-      {:sub, value} -> state - value
-      {:mul, value} -> state * value
-      {:div, value} -> state / value
-      {:value, caller} ->
-        send(caller, {:response, state})
-        state
-      invalid_request ->
-        IO.puts("invalid request #{inspect(invalid_request)}")
-        state
-    end
+    state =
+      receive do
+        message -> process_message(state, message)
+      end
 
     loop(state)
+  end
+
+  defp process_message(state, {:add, value}), do: state + value
+  defp process_message(state, {:sub, value}), do: state - value
+  defp process_message(state, {:mul, value}), do: state * value
+  defp process_message(state, {:div, value}), do: state / value
+
+  defp process_message(state, {:value, caller}) do
+    send(caller, {:response, state})
+    state
+  end
+
+  defp process_message(state, invalid) do
+    IO.puts("invalid request #{inspect(invalid)}")
+    state
   end
 end
