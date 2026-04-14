@@ -1,52 +1,52 @@
 defmodule Todo.Database do
   use GenServer
 
-  @db_folder "./persist"
-
   def start do
     GenServer.start(__MODULE__, nil, name: __MODULE__)
   end
 
-  def store(key, data), do: GenServer.cast(__MODULE__, {:store, key, data})
+  def store(key, data) do
+    key
+    |> choose_worker()
+    |> Todo.Database.Worker.store(key, data)
+  end
 
-  def get(key), do: GenServer.call(__MODULE__, {:get, key})
+  def get(key) do
+    key
+    |> choose_worker()
+    |> Todo.Database.Worker.get(key)
+  end
 
   def reset(), do: GenServer.cast(__MODULE__, :reset)
 
   @impl GenServer
   def init(_) do
-    File.mkdir_p!(@db_folder)
-    {:ok, nil}
+    {:ok, start_workers(3)}
   end
 
   @impl GenServer
-  def handle_cast({:store, key, data}, state) do
-    key
-    |> file_name()
-    |> File.write!(:erlang.term_to_binary(data))
+  def handle_call({:choose_worker, name}, _from, workers) do
+    index = :erlang.phash2(name, 3)
+    worker = workers[index]
 
-    {:noreply, state}
+    {:reply, worker, workers}
   end
 
   @impl GenServer
-  def handle_cast(:reset, state) do
-    {:ok, files} = File.ls(@db_folder)
-    Enum.each(files, fn file -> File.rm(Path.join(@db_folder, file)) end)
-    {:noreply, state}
+  def handle_cast(:reset, workers) do
+    Enum.each(workers, fn {_, worker} -> Todo.Database.Worker.reset(worker) end)
+
+    {:noreply, workers}
   end
 
-  @impl GenServer
-  def handle_call({:get, key}, _from, state) do
-    data =
-      case File.read(file_name(key)) do
-        {:ok, contents} -> :erlang.binary_to_term(contents)
-        _ -> nil
-      end
-
-    {:reply, data, state}
+  defp choose_worker(name) do
+    GenServer.call(__MODULE__, {:choose_worker, name})
   end
 
-  defp file_name(key) do
-    Path.join(@db_folder, to_string(key))
+  defp start_workers(count) do
+    for index <- 1..count, into: %{} do
+      {:ok, worker} = Todo.Database.Worker.start("./persist" <> to_string(index))
+      {index - 1, worker}
+    end
   end
 end
