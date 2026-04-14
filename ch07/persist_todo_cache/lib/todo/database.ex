@@ -11,6 +11,8 @@ defmodule Todo.Database do
 
   def get(key), do: GenServer.call(__MODULE__, {:get, key})
 
+  def reset(), do: GenServer.cast(__MODULE__, :reset)
+
   @impl GenServer
   def init(_) do
     File.mkdir_p!(@db_folder)
@@ -23,6 +25,13 @@ defmodule Todo.Database do
     |> file_name()
     |> File.write!(:erlang.term_to_binary(data))
 
+    {:noreply, state}
+  end
+
+  @impl GenServer
+  def handle_cast(:reset, state) do
+    {:ok, files} = File.ls(@db_folder)
+    Enum.each(files, fn file -> File.rm(Path.join(@db_folder, file)) end)
     {:noreply, state}
   end
 
